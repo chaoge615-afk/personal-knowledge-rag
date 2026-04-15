@@ -24,7 +24,7 @@ wheels/
 # 敏感信息
 .env
 .env.local
-.env.*
+!.env.example
 
 # 向量数据库
 chroma_db/

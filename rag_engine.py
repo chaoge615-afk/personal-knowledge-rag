@@ -17,15 +17,15 @@ from langchain_core.embeddings import Embeddings
 load_dotenv()
 
 class MinimaxEmbeddings(Embeddings):
-    """DeepSeek Embedding 适配"""
-    def __init__(self, api_key: str, model: str = "deepseek-embed"):
+    """SiliconFlow Embedding 适配"""
+    def __init__(self, api_key: str, model: str = "BAAI/bge-large-zh-v1.5", base_url: str = "https://api.siliconflow.cn/v1"):
         self.api_key = api_key
         self.model = model
-        self.base_url = "https://api.deepseek.com"
+        self.base_url = base_url
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """批量embed文档"""
-        url = "https://api.siliconflow.cn/v1/embeddings"
+        url = f"{self.base_url}/embeddings"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -69,7 +69,7 @@ class KnowledgeRAG:
 
         # API base URL，从环境变量读取
         self.base_url = os.getenv("BASE_URL", "https://api.minimaxi.com/anthropic")
-        self.embedding_base_url = os.getenv("EMBEDDING_BASE_URL", "https://api.minimax.chat/v1")
+        self.embedding_base_url = os.getenv("SILICONFLOW_BASE_URL", "https://api.siliconflow.cn/v1")
 
         # 初始化组件
         self._init_embeddings()
@@ -84,7 +84,8 @@ class KnowledgeRAG:
             raise ValueError("请在.env中配置SILICONFLOW_API_KEY")
         self.embeddings = MinimaxEmbeddings(
             api_key=siliconflow_api_key,
-            model="BAAI/bge-large-zh-v1.5"
+            model=self.embedding_model,
+            base_url=self.embedding_base_url
         )
 
     def _init_llm(self):

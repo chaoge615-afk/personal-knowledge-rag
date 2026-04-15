@@ -214,6 +214,10 @@ class KnowledgeRAG:
             content = result.content if hasattr(result, 'content') else str(result)
             if content is None:
                 return "LLM返回的内容为空，请检查API配置"
+
+            # 过滤掉思考过程标签
+            import re
+            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
             return content
         except Exception as e:
             return f"调用LLM时出错: {str(e)}"

@@ -104,18 +104,38 @@ TOP_K=5
 
 ## Docker 部署
 
+### 方式一：docker run
+
 ```bash
 # 构建镜像
 docker build -t personal-knowledge-rag .
 
 # 运行容器
-docker run -d -p 8090:8000 \
+docker run -d -p 8090:8090 \
   -e DASHSCOPE_API_KEY=your_key \
   -e MINIMAX_GROUP_ID=your_group_id \
   -e SILICONFLOW_API_KEY=your_siliconflow_key \
   -v ./knowledge:/app/knowledge \
   -v ./chroma_db:/app/chroma_db \
+  -v ./logs:/app/logs \
   personal-knowledge-rag
+```
+
+### 方式二：docker-compose（推荐）
+
+```bash
+# 复制环境变量配置
+cp .env.example .env
+# 编辑 .env 填入你的 API Key
+
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
 ```
 
 ## 项目结构
@@ -131,8 +151,10 @@ personal-knowledge-rag/
 ├── requirements.txt     # 依赖列表
 ├── .env.example         # 环境变量示例
 ├── Dockerfile          # Docker构建文件
+├── docker-compose.yml   # Docker Compose配置
 ├── knowledge/           # 你的markdown知识库放这里
-└── chroma_db/           # 向量数据库持久化存储（自动生成）
+├── chroma_db/           # 向量数据库持久化存储（自动生成）
+└── logs/                # 日志目录（自动生成）
 ```
 
 ## 技术栈

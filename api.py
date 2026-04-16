@@ -77,6 +77,28 @@ async def get_stats():
         return {"error": str(e)}
 
 
+@app.post("/api/load")
+async def load_knowledge():
+    """触发知识库加载"""
+    try:
+        rag = get_rag()
+        count = rag.load_knowledge()
+        return {"success": True, "chunks_loaded": count}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/clear")
+async def clear_knowledge():
+    """清空知识库"""
+    try:
+        rag = get_rag()
+        rag.clear_database()
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="::", port=8090)

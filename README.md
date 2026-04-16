@@ -8,7 +8,9 @@
 - 自动加载 `knowledge/` 目录下所有markdown文件
 - 基于 Minimax API，性价比高，国内直接调用不翻墙
 - 使用 ChromaDB 做向量存储，无需额外部署服务
-- 自定义适配 Minimax Embedding 接口，支持 GroupID 认证
+- 自定义适配 SiliconFlow Embedding 接口
+- 支持 Web UI 和 API 两种交互方式
+- 支持 Docker 部署，便于迁移
 
 ## 快速开始
 
@@ -24,14 +26,13 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，填入你的 [Minimax API Key](https://platform.minimaxi.com/):
+编辑 `.env` 文件，填入你的 API Key:
 
 ```
-DASHSCOPE_API_KEY=你的-minimax-api-key在这里
-MINIMAX_GROUP_ID=你的-group-id在这里
+DASHSCOPE_API_KEY=你的-minimax-api-key
+MINIMAX_GROUP_ID=你的-group-id
+SILICONFLOW_API_KEY=你的-siliconflow-api-key
 ```
-
-**说明**：Minimax 需要同时提供 API Key 和 Group ID，两个都可以从 Minimax 控制台获取。
 
 ### 3. 添加你的知识库
 
@@ -40,25 +41,41 @@ MINIMAX_GROUP_ID=你的-group-id在这里
 ### 4. 运行
 
 ```bash
+# Web UI 方式（推荐）
+python api.py
+# 访问 http://localhost:8090
+
+# 命令行方式
 python main.py
 ```
 
-### 5. 第一次使用
+### 5. 加载知识库
 
-进入程序后，先输入 `load` 加载所有markdown文件：
-```
-> load
-正在加载知识库...
-找到 X 个markdown文件
-分割为 Y 个文本块
-知识库更新完成，当前总共有 Z 个文档块
+**Web UI**: 点击页面上的「📥 加载知识库」按钮
+
+**命令行**: 输入 `load`
+
+**CLI脚本**:
+```bash
+python load_cli.py                    # 加载知识库
+python load_cli.py --stats            # 查看统计信息
+python load_cli.py --clear            # 清空并重新加载
+python load_cli.py --help             # 查看帮助
 ```
 
-加载完成就可以直接提问了！
+## API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/` | GET | Web UI 页面 |
+| `/api/ask` | POST | 提问，参数: `{"question": "问题"}` |
+| `/api/load` | POST | 加载知识库 |
+| `/api/clear` | POST | 清空知识库 |
+| `/api/stats` | GET | 获取统计信息 |
 
 ## 使用说明
 
-### 常用命令
+### 常用命令（命令行模式）
 
 | 命令 | 作用 |
 |------|------|
@@ -77,20 +94,43 @@ python main.py
 CHUNK_SIZE=500
 # 重叠大小，避免内容被从中间切开丢失上下文
 CHUNK_OVERLAP=50
+# 检索数量
+TOP_K=5
 ```
 
 如果发现回答找不到正确内容：
 - 如果文档都比较长，可以试试 `CHUNK_SIZE=1000`
 - 如果切分得不对，可以调大 `CHUNK_OVERLAP` 到 100
 
+## Docker 部署
+
+```bash
+# 构建镜像
+docker build -t personal-knowledge-rag .
+
+# 运行容器
+docker run -d -p 8090:8000 \
+  -e DASHSCOPE_API_KEY=your_key \
+  -e MINIMAX_GROUP_ID=your_group_id \
+  -e SILICONFLOW_API_KEY=your_siliconflow_key \
+  -v ./knowledge:/app/knowledge \
+  -v ./chroma_db:/app/chroma_db \
+  personal-knowledge-rag
+```
+
 ## 项目结构
 
 ```
 personal-knowledge-rag/
 ├── main.py              # 交互式命令行入口
+├── api.py               # FastAPI Web服务入口
 ├── rag_engine.py        # RAG核心引擎
+├── load_cli.py          # 命令行加载工具
+├── templates/
+│   └── index.html       # Web UI页面
 ├── requirements.txt     # 依赖列表
 ├── .env.example         # 环境变量示例
+├── Dockerfile          # Docker构建文件
 ├── knowledge/           # 你的markdown知识库放这里
 └── chroma_db/           # 向量数据库持久化存储（自动生成）
 ```
@@ -99,7 +139,9 @@ personal-knowledge-rag/
 
 - **LangChain**: RAG框架
 - **ChromaDB**: 本地向量数据库
-- **Minimax**: 大语言模型 + Embedding
+- **FastAPI**: Web服务
+- **Minimax**: 大语言模型
+- **SiliconFlow**: Embedding服务
 - **OpenAI SDK**: 兼容 Minimax API 接口
 
 ## 成本说明
